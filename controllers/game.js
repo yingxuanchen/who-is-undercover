@@ -176,6 +176,7 @@ exports.leaveGame = (req, res, next) => {
       delete updatedRoom.currentTurn;
       delete updatedRoom.firstTurn;
       delete updatedRoom.currentCount;
+      delete updatedRoom.winner;
       updatedRoom.users.forEach(user => {
         delete user.isOut;
         delete user.role;
