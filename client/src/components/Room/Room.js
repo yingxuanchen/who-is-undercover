@@ -47,7 +47,7 @@ const Room = (props) => {
   });
   const [ cardState, setCardState ] = useState(true);
   const [ chosenUserState, setChosenUserState ] = useState(null);
-  const [ dialogState, setDialogState ] =useState(false);
+  const [ dialogState, setDialogState ] = useState(false);
   const [ dialogPropsState, setDialogPropsState ] = useState({
     onClose: null,
     title: '',
@@ -55,6 +55,7 @@ const Room = (props) => {
     onCancel: null,
     onConfirm: null
   });
+  const [ messageState, setMessageState ] = useState(null);
 
   useEffect(() => {
     const socket = openSocket();
@@ -63,6 +64,13 @@ const Room = (props) => {
       const user = data.room.users.find(user => user.name === username);
       if (user) {
         setUserState(user);
+      }
+
+      if ((data.action === 'vote' && data.userVotedOut) || data.action === 'hostVote') {
+        const usernameVotedOut = data.room.users[data.userVotedOut].name;
+        setMessageState(`${usernameVotedOut} was voted out!`);
+      } else {
+        setMessageState(null);
       }
     });
 
@@ -275,6 +283,8 @@ const Room = (props) => {
           <Grid item xs={1}/>
         </Grid>
       </Typography>
+      <br/>
+
       {!roomState.hasStarted &&
         <Typography color='error'>{roomState.totalCount < 3 ? 'Game must have at least 3 users' : ''}</Typography>
       }
@@ -284,7 +294,9 @@ const Room = (props) => {
           {getWinnerMessage(roomState.winner)}
         </Typography>
       }
-      <p></p>
+      <Typography variant='h6' color='primary'>
+        {messageState}
+      </Typography>
 
       {roomState.hasStarted && (roomState.currentTurn === 'voting' || roomState.currentTurn === 'hostVoting') ?
         <React.Fragment>
@@ -296,7 +308,7 @@ const Room = (props) => {
                   <FormControlLabel
                     key={index}
                     value={index.toString()}
-                    disabled={user.isOut || (roomState.currentTurn === 'hostVoting' && !roomState.usersWithMostVotes.includes(index))}
+                    disabled={user.isOut || userState.hasVoted || (roomState.currentTurn === 'hostVoting' && !roomState.usersWithMostVotes.includes(index))}
                     control={<Radio />}
                     label={getUserString(user, index)} />
                 )

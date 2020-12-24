@@ -212,6 +212,7 @@ exports.vote = (req, res, next) => {
   const roomId = req.body.roomId;
   const username = req.body.username;
   const chosenUser = req.body.chosenUser;
+  let userVotedOut = null;
 
   Room.findByRoomId(roomId)
     .then(room => {
@@ -245,6 +246,7 @@ exports.vote = (req, res, next) => {
           updatedRoom.usersWithMostVotes = [...usersWithMostVotes];
         } else {
           updatedRoom.votes = [];
+          userVotedOut = usersWithMostVotes[0];
           updatedRoom.users[usersWithMostVotes[0]].isOut = true;
           updatedRoom.firstTurn = getFirstTurn(updatedRoom.users, usersWithMostVotes[0], updatedRoom.totalCount);
           updatedRoom.currentTurn = updatedRoom.firstTurn;
@@ -263,7 +265,7 @@ exports.vote = (req, res, next) => {
           req.body.winner = getWinner(updatedRoom.users, updatedRoom.currentCount);
           next();
         } else {
-          io.getIO().emit('room' + updatedRoom.roomId, { action: 'vote', room: updatedRoom });
+          io.getIO().emit('room' + updatedRoom.roomId, { action: 'vote', room: updatedRoom, userVotedOut: userVotedOut });
           return res.sendStatus(200);
         }
       }
@@ -298,7 +300,7 @@ exports.hostVote = (req, res, next) => {
           req.body.winner = getWinner(updatedRoom.users, updatedRoom.currentCount);
           next();
         } else {
-          io.getIO().emit('room' + updatedRoom.roomId, { action: 'hostVote', room: updatedRoom });
+          io.getIO().emit('room' + updatedRoom.roomId, { action: 'hostVote', room: updatedRoom, userVotedOut: chosenUser });
           return res.sendStatus(200);
         }
       }
