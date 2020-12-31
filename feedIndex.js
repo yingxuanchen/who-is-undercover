@@ -2,7 +2,9 @@ const readXlsxFile = require('read-excel-file/node');
 const Card = require('./models/card');
 const mongoConnect = require('./util/database').mongoConnect;
 
-const startNum;
+require('dotenv').config();
+
+const startNum = 99;
 
 mongoConnect(() => {
   readXlsxFile('words.xlsx').then((rows) => {
