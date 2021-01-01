@@ -388,28 +388,36 @@ function shouldEndGame(users, currentCount) {
   }
   
   const inUsers = users.filter(user => !user.isOut);
-  const firstRole = inUsers[0].role;
-  for (let i = 1; i < inUsers.length; i++) {
-    if (inUsers[i].role !== firstRole) {
-      return false;
-    }
+  const normUsers = inUsers.filter(user => user.role === 'norm');
+  const antiUsers = inUsers.filter(user => user.role === 'anti');
+
+  if (inUsers.length === normUsers.length) {
+    return true;
   }
-  return true;
+  if (antiUsers.length > normUsers.length) {
+    return true;
+  }
+  return false;
 }
 
 function getWinner(users, currentCount) {
   const inUsers = users.filter(user => !user.isOut);
+  const normUsers = inUsers.filter(user => user.role === 'norm');
+  const antiUsers = inUsers.filter(user => user.role === 'anti');
+  const blankUsers = inUsers.filter(user => user.role === 'blank');
 
-  if (currentCount > 2) {
-    return inUsers[0].role;
+  if (inUsers.length === normUsers.length) {
+    return 'norm';
+  }
+  if (antiUsers.length > normUsers.length) {
+    return 'anti';
   }
 
-  const blankUsers = inUsers.filter(user => user.role === 'blank');
   if (blankUsers.length === 2) {
     return 'blank';
   } else if (blankUsers.length === 1) {
     return users.findIndex(user => user.name === blankUsers[0].name);
   }
 
-  return inUsers.filter(user => user.role === 'anti').length > 0 ? 'anti' : 'norm';
+  return 'anti';
 }
