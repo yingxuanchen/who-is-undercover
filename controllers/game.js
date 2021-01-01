@@ -2,6 +2,10 @@ const Room = require('../models/room');
 const Card = require('../models/card');
 const io = require('../socket');
 
+exports.checkSession = (req, res, next) => {
+  res.status(200).json({ roomId: req.session.roomId, username: req.session.username });
+};
+
 exports.enterRoom = (req, res, next) => {
   const roomId = req.body.roomId;
   const username = req.body.username;
@@ -31,8 +35,12 @@ exports.enterRoom = (req, res, next) => {
     })
     .then(room => {
       if (room) {
-        io.getIO().emit('room' + room.roomId, { action: 'enterRoom', room: room });
-        return res.sendStatus(200);
+        req.session.roomId = roomId;
+        req.session.username = username;
+        req.session.save(err => {
+          io.getIO().emit('room' + room.roomId, { action: 'enterRoom', room: room });
+          return res.sendStatus(200);
+        });
       }
     })
     .catch(err => console.log(err));
@@ -66,8 +74,10 @@ exports.leaveRoom = (req, res, next) => {
     })
     .then(room => {
       if (room) {
-        io.getIO().emit('room' + room.roomId, { action: 'leaveRoom', room: room });
-        return res.sendStatus(200);
+        req.session.destroy(err => {
+          io.getIO().emit('room' + room.roomId, { action: 'leaveRoom', room: room });
+          return res.sendStatus(200);
+        });
       }
     })
     .catch(err => console.log(err));

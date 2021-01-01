@@ -75,8 +75,9 @@ const Room = (props) => {
     });
 
     return () => {
-      confirmLeaveGame();
+      // confirmLeaveGame();
       socket.close();
+      console.log(`Client disconnected: id=${socket.id}, roomId=${roomId}, username=${username}`);
     }
     // eslint-disable-next-line
   }, []);
@@ -219,6 +220,7 @@ const Room = (props) => {
       case 'norm': groupName = 'Civilians'; break;
       case 'anti': groupName = 'Undercovers'; break;
       case 'blank': groupName = 'Blanks'; break;
+      default: groupName = 'Unknown'; break;
     }
     return `The ${groupName} win!`;
   };

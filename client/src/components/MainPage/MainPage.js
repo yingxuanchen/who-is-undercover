@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -26,6 +26,18 @@ const MainPage = (props) => {
     error: false,
     helperText: ''
   });
+
+  useEffect(() => {
+    axios.get('/check-session')
+      .then(res => {
+        if (res.data.roomId && res.data.username) {
+          setRedirectState(
+            <Redirect to={{ pathname: '/room', data: {roomId: res.data.roomId, username: res.data.username} }} />
+          );
+        }
+      })
+      .catch(err => console.log(err));
+  }, []);
 
   const handleInputChange = (event) => {
     const updatedInputState = {...inputState, [event.target.name]: event.target.value};

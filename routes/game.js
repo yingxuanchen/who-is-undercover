@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const gameController = require('../controllers/game');
 
+router.get('/check-session', gameController.checkSession);
+
 router.post('/enter-room', gameController.enterRoom);
 router.post('/leave-room', gameController.leaveRoom);
 router.post('/room', gameController.getRoom);
