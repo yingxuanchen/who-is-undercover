@@ -153,7 +153,7 @@ const Room = (props) => {
   };
 
   const handleEndTurn = () => {
-    axios.post('/end-turn', { room: roomState })
+    axios.post('/end-turn', { roomId: roomId })
       .then(res => setChosenUserState(null))
       .catch(err => console.log(err));
   };

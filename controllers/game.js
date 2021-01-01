@@ -195,17 +195,31 @@ exports.leaveGame = (req, res, next) => {
 };
 
 exports.endTurn = (req, res, next) => {
-  const room = req.body.room;
+  const roomId = req.body.roomId;
 
-  const nextTurn = getNextTurn(room.users, +room.currentTurn, +room.firstTurn, room.totalCount);
+  Room.findByRoomId(roomId)
+    .then(room => {
+      if (!room) {
+        res.status(400).json({ error: 'room does not exist' });
+        return null;
+      }
 
-  const updatedRoom = {...room, currentTurn: nextTurn };
-  if (nextTurn === 'voting') {
-    updatedRoom.users.forEach(user => user.hasVoted = false);
-  }
+      const nextTurn = getNextTurn(room.users, +room.currentTurn, +room.firstTurn, room.totalCount);
 
-  io.getIO().emit('room' + updatedRoom.roomId, { action: 'endTurn', room: updatedRoom });
-  return res.sendStatus(200);
+      const updatedRoom = {...room, currentTurn: nextTurn };
+      if (nextTurn === 'voting') {
+        updatedRoom.users.forEach(user => user.hasVoted = false);
+      }
+
+      return Room.updateRoom(updatedRoom);
+    })
+    .then(updatedRoom => {
+      if (updatedRoom) {
+        io.getIO().emit('room' + updatedRoom.roomId, { action: 'endTurn', room: updatedRoom });
+        return res.sendStatus(200);
+      }
+    })
+    .catch(err => console.log(err));
 };
 
 exports.vote = (req, res, next) => {
