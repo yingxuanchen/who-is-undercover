@@ -354,7 +354,7 @@ const Room = (props) => {
             {cardState ? userState.card : 'Your word is hidden'}
           </Card>
           <p></p>
-          <Button variant='contained' onClick={handleTurnCard}>Turn Card</Button>
+          <Button variant='contained' onClick={handleTurnCard}>{cardState ? 'Hide Word' : 'Show Word'}</Button>
         </React.Fragment>
       }
 
