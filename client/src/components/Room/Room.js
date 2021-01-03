@@ -5,7 +5,6 @@ import openSocket from 'socket.io-client';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Button,
-  Card,
   FormControl,
   FormControlLabel,
   FormHelperText,
@@ -21,13 +20,9 @@ import {
   Typography
 } from '@material-ui/core';
 import AlertDialog from '../common/AlertDialog';
+import WordCard from '../WordCard/WordCard';
 
 const useStyles = makeStyles({
-  card: {
-    width: 'fit-content',
-    margin: 'auto',
-    padding: '20px'
-  },
   list: {
     textAlign: 'center'
   },
@@ -45,7 +40,6 @@ const Room = (props) => {
     antiCount: 1,
     blankCount: 0
   });
-  const [ cardState, setCardState ] = useState(true);
   const [ chosenUserState, setChosenUserState ] = useState(null);
   const [ dialogState, setDialogState ] = useState(false);
   const [ dialogPropsState, setDialogPropsState ] = useState({
@@ -177,10 +171,6 @@ const Room = (props) => {
         .then()
         .catch(err => console.log(err));
     }
-  };
-
-  const handleTurnCard = () => {
-    setCardState(!cardState);
   };
 
   const getUserString = (user, index) => {
@@ -351,13 +341,7 @@ const Room = (props) => {
       }
 
       {roomState.hasStarted &&
-        <React.Fragment>
-          <Card raised className={classes.card}>
-            {cardState ? userState.card : 'Your word is hidden'}
-          </Card>
-          <p></p>
-          <Button variant='contained' onClick={handleTurnCard}>{cardState ? 'Hide Word' : 'Show Word'}</Button>
-        </React.Fragment>
+        <WordCard word={userState.card} />
       }
 
       <AlertDialog 
