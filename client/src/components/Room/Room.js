@@ -66,7 +66,7 @@ const Room = (props) => {
         setUserState(user);
       }
 
-      if ((data.action === 'vote' && data.userVotedOut) || data.action === 'hostVote') {
+      if (data.userVotedOut) {
         const usernameVotedOut = data.room.users[data.userVotedOut].name;
         setMessageState(`${usernameVotedOut} was voted out!`);
       } else {
@@ -290,15 +290,15 @@ const Room = (props) => {
       {!roomState.hasStarted &&
         <Typography color='error'>{roomState.totalCount < 3 ? 'Game must have at least 3 users' : ''}</Typography>
       }
+      <Typography variant='h6' color='primary'>
+        {messageState}
+      </Typography>
       {roomState.currentTurn === 'ended' && 
         <Typography variant='h6' color='primary'>
           Game has ended! <br/>
           {getWinnerMessage(roomState.winner)}
         </Typography>
       }
-      <Typography variant='h6' color='primary'>
-        {messageState}
-      </Typography>
 
       {roomState.hasStarted && (roomState.currentTurn === 'voting' || roomState.currentTurn === 'hostVoting') ?
         <React.Fragment>
