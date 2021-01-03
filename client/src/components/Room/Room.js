@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Container, Draggable } from 'react-smooth-dnd';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import openSocket from 'socket.io-client';
@@ -12,6 +13,8 @@ import {
   Grid,
   List,
   ListItem,
+  ListItemIcon,
+  ListItemSecondaryAction,
   ListItemText,
   ListSubheader,
   Radio,
@@ -19,8 +22,10 @@ import {
   TextField,
   Typography
 } from '@material-ui/core';
+import DragHandleIcon from '@material-ui/icons/DragHandle';
 import AlertDialog from '../common/AlertDialog';
 import WordCard from '../WordCard/WordCard';
+import { applyDrag } from '../../shared/utils';
 
 const useStyles = makeStyles({
   list: {
@@ -215,6 +220,13 @@ const Room = (props) => {
     return `The ${groupName} win!`;
   };
 
+  const onDrop = (e) => {
+    setRoomState({
+      ...roomState,
+      users: applyDrag(roomState.users, e)
+    });
+  };
+
   if (!props.location.data) {
     return <Redirect to='/' />;
   }
@@ -323,20 +335,27 @@ const Room = (props) => {
             Users
           </ListSubheader>
         }>
-          {roomState.users.map((user, index) => {
-            return (
-              <React.Fragment key={index}>
-                <ListItem className={classes.list}>
-                  <ListItemText primary={getUserString(user, index)} />
-                </ListItem>
-                {user.name === username && roomState.currentTurn === index &&
-                  <Button variant='contained' color='primary' onClick={handleEndTurn}>
-                    End Turn
-                  </Button>
-                }
-              </React.Fragment>
-            )
-          })}
+          <Container dragHandleSelector=".drag-handle" lockAxis="y" onDrop={onDrop}>
+            {roomState.users.map((user, index) => {
+              return (
+                <Draggable key={index}>
+                  <ListItem className={classes.list}>
+                    <ListItemText primary={getUserString(user, index)} />
+                    <ListItemSecondaryAction>
+                      <ListItemIcon className="drag-handle">
+                        <DragHandleIcon />
+                      </ListItemIcon>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  {user.name === username && roomState.currentTurn === index &&
+                    <Button variant='contained' color='primary' onClick={handleEndTurn}>
+                      End Turn
+                    </Button>
+                  }
+                </Draggable>
+              )
+            })}
+          </Container>
         </List>
       }
 
