@@ -3,7 +3,29 @@ const Card = require('../models/card');
 const io = require('../socket');
 
 exports.checkSession = (req, res, next) => {
-  res.status(200).json({ roomId: req.session.roomId, username: req.session.username });
+  const roomId = req.session.roomId;
+  const username = req.session.username;
+
+  if (!roomId || !username) {
+    return res.sendStatus(200);
+  }
+
+  Room.findByRoomId(roomId)
+    .then(room => {
+      if (!room) {
+        return req.session.destroy(err => {
+          res.sendStatus(200);
+        });
+      }
+      const user = room.users.find(user => user.name === username);
+      if (!user) {
+        return req.session.destroy(err => {
+          res.sendStatus(200);
+        });
+      }
+      return res.status(200).json({ roomId: roomId, username: username });
+    })
+    .catch(err => console.log(err));
 };
 
 exports.enterRoom = (req, res, next) => {
@@ -165,7 +187,7 @@ exports.endGame = (req, res, next) => {
     })
     .then(updatedRoom => {
       if (updatedRoom) {
-        io.getIO().emit('room' + updatedRoom.roomId, { action: 'endGame', room: updatedRoom });
+        io.getIO().emit('room' + updatedRoom.roomId, { action: 'endGame', room: updatedRoom, userVotedOut: req.body.userVotedOut });
         return res.sendStatus(200);
       }
     })
@@ -287,6 +309,7 @@ exports.vote = (req, res, next) => {
       if (updatedRoom) {
         if (shouldEndGame(updatedRoom.users, updatedRoom.currentCount)) {
           req.body.winner = getWinner(updatedRoom.users, updatedRoom.currentCount);
+          req.body.userVotedOut = userVotedOut;
           next();
         } else {
           io.getIO().emit('room' + updatedRoom.roomId, { action: 'vote', room: updatedRoom, userVotedOut: userVotedOut });
@@ -322,6 +345,7 @@ exports.hostVote = (req, res, next) => {
       if (updatedRoom) {
         if (shouldEndGame(updatedRoom.users, updatedRoom.currentCount)) {
           req.body.winner = getWinner(updatedRoom.users, updatedRoom.currentCount);
+          req.body.userVotedOut = chosenUser;
           next();
         } else {
           io.getIO().emit('room' + updatedRoom.roomId, { action: 'hostVote', room: updatedRoom, userVotedOut: chosenUser });
