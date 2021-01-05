@@ -15,3 +15,12 @@ export const applyDrag = (arr, dragResult) => {
 
   return result;
 };
+
+export const getUserString = (user, index, currentTurn, myUsername) => {
+  return user.name + 
+    (user.name === myUsername ? ' (Me)' : '') + 
+    (user.isHost ? ' (Host)' : '') +
+    (currentTurn === index ? ' (Speaking)' : '') +
+    (user.isOut ? ' (Out)' : '') +
+    (currentTurn === 'ended' ? ' - ' + user.card : '');
+};

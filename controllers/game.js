@@ -122,6 +122,7 @@ exports.getRoom = (req, res, next) => {
 
 exports.startGame = (req, res, next) => {
   const room = req.body.room;
+  const randomOrder = req.body.randomOrder;
   let updatedRoom;
 
   Room.findByRoomId(room.roomId)
@@ -149,15 +150,24 @@ exports.startGame = (req, res, next) => {
       );
       
       const roleCardArray = getRoleCardArray(card, updatedRoom.totalCount, updatedRoom.antiCount, updatedRoom.blankCount);
-      shuffleArray(updatedRoom.users);
       updatedRoom.users.forEach((user, index) => {
         user.role = roleCardArray[index].role;
         user.card = roleCardArray[index].card;
         user.isOut = false;
       });
-      do {
-        shuffleArray(updatedRoom.users)
-      } while (updatedRoom.users[0].role === 'blank');
+
+      if (randomOrder) {
+        do {
+          shuffleArray(updatedRoom.users);
+        } while (updatedRoom.users[0].role === 'blank');
+      } else {
+        let firstTurn = 0;
+        do {
+          firstTurn = getRandomInt(0, updatedRoom.users.length);
+        } while (updatedRoom.users[firstTurn].role === 'blank');
+        updatedRoom.firstTurn = firstTurn;
+        updatedRoom.currentTurn = firstTurn;
+      }
 
       return Room.updateRoom(updatedRoom);
     })
@@ -390,6 +400,9 @@ function getRoleCardArray(card, totalCount, antiCount, blankCount) {
     arr.push({ role: 'blank', card: '' });
   }
 
+  do {
+    shuffleArray(arr)
+  } while (arr[0].role === 'blank');
   return arr;
 }
 
