@@ -9,7 +9,6 @@ import {
   ListSubheader,
 } from '@material-ui/core';
 import { getUserString } from '../../shared/utils';
-import * as actionTypes from '../../store/actions';
 
 const useStyles = makeStyles({
   list: {
@@ -50,10 +49,4 @@ const mapStateToProps = state => {
   };
 };
 
-const mapDispatchToProps = dispatch => {
-  return {
-    onUpdateRoom: (room) => dispatch({type: actionTypes.UPDATE_ROOM, room: room})
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(UserList);
+export default connect(mapStateToProps)(UserList);

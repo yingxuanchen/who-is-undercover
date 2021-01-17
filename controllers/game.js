@@ -123,6 +123,7 @@ exports.getRoom = (req, res, next) => {
 exports.startGame = (req, res, next) => {
   const room = req.body.room;
   const randomOrder = req.body.randomOrder;
+  const languageArray = req.body.languageArray;
   let updatedRoom;
 
   Room.findByRoomId(room.roomId)
@@ -132,7 +133,7 @@ exports.startGame = (req, res, next) => {
         return null;
       }
       updatedRoom = {...oldRoom};
-      return Card.getOne();
+      return Card.getOne(languageArray);
     })
     .then(card => {
       if (!card) {

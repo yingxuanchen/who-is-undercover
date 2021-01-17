@@ -10,7 +10,8 @@
     "build": "cd client && npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js",
-    "feed": "node feedIndex.js"
+    "feed": "node feedIndex.js",
+    "debugFeed": "nodemon --inspect feedIndex.js"
   },
   "author": "lemonzchen",
   "license": "ISC",

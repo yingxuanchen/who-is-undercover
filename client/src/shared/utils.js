@@ -18,9 +18,10 @@ export const applyDrag = (arr, dragResult) => {
 
 export const getUserString = (user, index, currentTurn, myUsername) => {
   return user.name + 
-    (user.name === myUsername ? ' (Me)' : '') + 
+    // (user.name === myUsername ? ' (Me)' : '') + 
     (user.isHost ? ' (Host)' : '') +
     (currentTurn === index ? ' (Speaking)' : '') +
+    (currentTurn === 'ended' ? ' - ' + user.card : '') +
     (user.isOut ? ' (Out)' : '') +
-    (currentTurn === 'ended' ? ' - ' + user.card : '');
+    (currentTurn === 'ended' && user.role === 'anti' ? ' (Undercover)' : '');
 };

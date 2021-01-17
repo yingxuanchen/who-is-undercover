@@ -6,9 +6,11 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import roomReducer from './store/reducers/room';
+import userReducer from './store/reducers/user';
 
 const rootReducer = combineReducers({
-  room: roomReducer
+  room: roomReducer,
+  user: userReducer
 });
 
 const store = createStore(rootReducer);

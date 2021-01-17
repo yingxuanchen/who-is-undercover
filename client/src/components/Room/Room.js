@@ -5,31 +5,47 @@ import axios from 'axios';
 import openSocket from 'socket.io-client';
 import {
   Button,
+  Checkbox,
   FormControl,
   FormControlLabel,
+  FormGroup,
   FormHelperText,
   FormLabel,
   Grid,
   Radio,
   RadioGroup,
   Switch,
-  TextField,
   Typography
 } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import AlertDialog from '../common/AlertDialog';
 import WordCard from '../WordCard/WordCard';
 import UserList from '../UserList/UserList';
 import UserListDnd from '../UserListDnd/UserListDnd';
+import RoomInfo from '../RoomInfo/RoomInfo';
 import { getUserString } from '../../shared/utils';
 import * as actionTypes from '../../store/actions';
 
+const useStyles = makeStyles({
+  language: {
+    flexDirection: 'initial',
+  },
+});
+
 const Room = (props) => {
+  const classes = useStyles();
+
   const onUpdateRoom = props.onUpdateRoom;
+  const onUpdateUser = props.onUpdateUser;
   
   const roomId = props.location.data ? props.location.data.roomId : null;
   const username = props.location.data ? props.location.data.username : null;
 
-  const [ userState, setUserState ] = useState(null);
+  const languages = [
+    { prop: 'english', label: 'English' },
+    { prop: 'chinese', label: 'Chinese' }
+  ];
+
   const [ inputState, setInputState ] = useState({
     antiCount: 1,
     blankCount: 0
@@ -45,6 +61,9 @@ const Room = (props) => {
   });
   const [ messageState, setMessageState ] = useState(null);
   const [ randomOrderState, setRandomOrderState ] = useState(false);
+  const [ languageState, setLanguageState ] = useState(languages.map(el => el.prop));
+
+  const languageError = languageState.length < 1;
 
   useEffect(() => {
     const socket = openSocket();
@@ -52,7 +71,7 @@ const Room = (props) => {
       props.onUpdateRoom(data.room);
       const user = data.room.users.find(user => user.name === username);
       if (user) {
-        setUserState(user);
+        onUpdateUser(user);
       }
 
       if (data.userVotedOut !== undefined && data.userVotedOut !== null) {
@@ -80,14 +99,26 @@ const Room = (props) => {
     axios.post('/room', { roomId: roomId, username: username })
       .then(res => {
         onUpdateRoom(res.data.room);
-        setUserState(res.data.user);
+        onUpdateUser(res.data.user);
       })
       .catch(err => console.log(err));
-  }, [roomId, username, onUpdateRoom]);
+  }, [roomId, username, onUpdateRoom, onUpdateUser]);
 
   const handleInputChange = (event) => {
     const updatedInputState = {...inputState, [event.target.name]: +event.target.value};
     setInputState(updatedInputState);
+  };
+
+  const handleChooseLanguage = (event) => {
+    if (event.target.checked) {
+      setLanguageState(languageState.concat([event.target.name]));
+    } else {
+      setLanguageState(languageState.filter(lang => lang !== event.target.name));
+    }
+  };
+
+  const handleOrderSwitch = () => {
+    setRandomOrderState(!randomOrderState);
   };
 
   const handleLeaveRoom = () => {
@@ -107,7 +138,8 @@ const Room = (props) => {
           blankCount: inputState.blankCount,
           users: props.room.users
         },
-        randomOrder: randomOrderState
+        randomOrder: randomOrderState,
+        languageArray: languageState
       })
       .then()
       .catch(err => console.log(err));
@@ -118,7 +150,7 @@ const Room = (props) => {
     setDialogPropsState({
       onClose: handleCloseDialog,
       title: 'Confirm End Game?',
-      message: "The game will end and all words will be shown to all users.",
+      message: 'The game will end and all words will be shown to all users.',
       onCancel: handleCloseDialog,
       onConfirm: confirmEndGame
     });
@@ -135,7 +167,7 @@ const Room = (props) => {
     setDialogPropsState({
       onClose: handleCloseDialog,
       title: 'Confirm Leave Game?',
-      message: "All users will go back to the waiting area.",
+      message: 'All users will go back to the waiting area.',
       onCancel: handleCloseDialog,
       onConfirm: confirmLeaveGame
     });
@@ -177,18 +209,14 @@ const Room = (props) => {
     }
   };
 
-  const handleOrderSwitch = () => {
-    setRandomOrderState(!randomOrderState);
-  };
-
   const getVoteMessage = () => {
     if (props.room.currentTurn === 'hostVoting') {
       return 'Please discuss and only host can vote';
     }
-    if (userState.isOut) {
+    if (props.user.isOut) {
       return 'You cannot vote because you are out';
     }
-    if (userState.hasVoted) {
+    if (props.user.hasVoted) {
       return 'Please wait for others to vote';
     }
     if (!chosenUserState) {
@@ -218,59 +246,33 @@ const Room = (props) => {
     return <Redirect to='/' />;
   }
 
-  return (props.room && userState &&
+  return (props.room && props.user &&
     <div>
       <Typography variant='h6'>
         <Grid container spacing={1}>
-          <Grid item xs={1} sm={4}/><Grid item xs={5} sm={2}>Room Id:</Grid><Grid item xs={5} sm={2}>{props.room.roomId}</Grid><Grid item xs={1} sm={4}/>
-          <Grid item xs={1} sm={4}/><Grid item xs={5} sm={2}>Total:</Grid><Grid item xs={5} sm={2}>{props.room.totalCount}</Grid><Grid item xs={1} sm={4}/>
-
-          {(props.room.hasStarted || userState.isHost) &&
-            <React.Fragment>
-              <Grid item xs={1} sm={4}/><Grid item xs={5} sm={2}>Undercover:</Grid>
-              <Grid item xs={5} sm={2}>
-                {userState.isHost && !props.room.hasStarted ?
-                  <TextField type='number' fullWidth id='antiCount' name='antiCount' label='Undercover' defaultValue={inputState.antiCount}
-                    inputProps={{min: '1', max: `${parseInt(props.room.totalCount/3)}`}} onChange={handleInputChange} />
-                  : props.room.antiCount
-                }
-              </Grid>
-              <Grid item xs={1} sm={4}/>
-
-              <Grid item xs={1} sm={4}/><Grid item xs={5} sm={2}>Blank:</Grid>
-              <Grid item xs={5} sm={2}>
-                {userState.isHost && !props.room.hasStarted ?
-                  <TextField type='number' fullWidth id='blankCount' name='blankCount' label='Blank' defaultValue={inputState.blankCount}
-                    inputProps={{min: '0', max: `${props.room.totalCount < 4 ? '0' : '1'}`}} onChange={handleInputChange} />
-                  : props.room.blankCount
-                }
-              </Grid>
-              <Grid item xs={1} sm={4}/> 
-            </React.Fragment>
-          }
-
+          <RoomInfo inputState={inputState} handleInputChange={handleInputChange} />
           <Grid item xs={1}/>
-            <Grid item xs={10}>
-              {!props.room.hasStarted &&
-                <Button variant='contained' onClick={handleLeaveRoom}>Leave Room</Button>
-              }
-              {userState.isHost && !props.room.hasStarted &&
-                <Button variant='contained' color='primary' onClick={handleStartGame}
-                  disabled={props.room.totalCount < 3 ? true : false} >
-                  Start Game
-                </Button>
-              }
-              {userState.isHost && props.room.hasStarted && !(props.room.currentTurn === 'ended') &&
-                <Button variant='contained' onClick={handleEndGame}>
-                  End Game
-                </Button>
-              }
-              {userState.isHost && props.room.currentTurn === 'ended' &&
-                <Button variant='contained' onClick={handleLeaveGame}>
-                  Leave Game
-                </Button>
-              }
-            </Grid>
+          <Grid item xs={10}>
+            {!props.room.hasStarted &&
+              <Button variant='contained' onClick={handleLeaveRoom}>Leave Room</Button>
+            }
+            {props.user.isHost && !props.room.hasStarted &&
+              <Button variant='contained' color='primary' onClick={handleStartGame}
+                disabled={props.room.totalCount < 3 || languageError ? true : false} >
+                Start Game
+              </Button>
+            }
+            {props.user.isHost && props.room.hasStarted && !(props.room.currentTurn === 'ended') &&
+              <Button variant='contained' onClick={handleEndGame}>
+                End Game
+              </Button>
+            }
+            {props.user.isHost && props.room.currentTurn === 'ended' &&
+              <Button variant='contained' onClick={handleLeaveGame}>
+                Leave Game
+              </Button>
+            }
+          </Grid>
           <Grid item xs={1}/>
         </Grid>
       </Typography>
@@ -289,9 +291,23 @@ const Room = (props) => {
         </Typography>
       }
 
-      {!props.room.hasStarted && userState.isHost &&
-        <Typography component="div">
-          <Grid component="label" container alignItems="center" justify="center" spacing={1}>
+      {!props.room.hasStarted && props.user.isHost &&
+        <Typography component='div'>
+          <FormControl error={languageError} component='fieldset'>
+            <FormLabel component='legend'>Language: </FormLabel>
+            <FormGroup classes={{root: classes.language}}>
+              {languages.map(lang => {
+                return (
+                  <FormControlLabel
+                    key={lang.prop}
+                    control={<Checkbox checked={languageState.includes(lang.prop)} onChange={handleChooseLanguage} name={lang.prop} color='primary' />}
+                    label={lang.label} />
+                )
+              })}
+            </FormGroup>
+            {languageError && <FormHelperText>Please choose at least 1 language</FormHelperText>}
+          </FormControl>
+          <Grid component='label' container alignItems='center' justify='center' spacing={1}>
             <Grid item>Follow Order</Grid>
             <Grid item>
               <Switch checked={randomOrderState} onChange={handleOrderSwitch} color='primary' />
@@ -303,15 +319,15 @@ const Room = (props) => {
 
       {props.room.hasStarted && (props.room.currentTurn === 'voting' || props.room.currentTurn === 'hostVoting') ?
         <React.Fragment>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Users</FormLabel>
-            <RadioGroup aria-label="users" name="users" value={chosenUserState} onChange={handleChooseUser}>
+          <FormControl component='fieldset'>
+            <FormLabel component='legend'>Users</FormLabel>
+            <RadioGroup aria-label='users' name='users' value={chosenUserState} onChange={handleChooseUser}>
               {props.room.users.map((user, index) => {
                 return (
                   <FormControlLabel
                     key={index}
                     value={index.toString()}
-                    disabled={user.isOut || userState.hasVoted || (props.room.currentTurn === 'hostVoting' && !props.room.usersWithMostVotes.includes(index))}
+                    disabled={user.isOut || props.user.hasVoted || (props.room.currentTurn === 'hostVoting' && !props.room.usersWithMostVotes.includes(index))}
                     control={<Radio />}
                     label={getUserString(user, index, props.room.currentTurn, username)} />
                 )
@@ -319,9 +335,9 @@ const Room = (props) => {
             </RadioGroup>
             <FormHelperText>{getVoteMessage()}</FormHelperText>
             <Button variant='contained' color='primary'
-              disabled={(props.room.currentTurn === 'hostVoting' && !userState.isHost) || 
-                (props.room.currentTurn === 'voting' && userState.isOut) || 
-                userState.hasVoted}
+              disabled={(props.room.currentTurn === 'hostVoting' && !props.user.isHost) || 
+                (props.room.currentTurn === 'voting' && props.user.isOut) || 
+                props.user.hasVoted}
               onClick={handleVote}>
               Vote
             </Button>
@@ -329,13 +345,15 @@ const Room = (props) => {
           <p></p>
         </React.Fragment> :
 
-        !props.room.hasStarted && userState.isHost && !randomOrderState ?
+        !props.room.hasStarted && props.user.isHost && !randomOrderState ?
         <UserListDnd username={username} handleEndTurn={handleEndTurn} /> :
-        <UserList username={username} handleEndTurn={handleEndTurn} />
+        props.room.users !== undefined ?
+        <UserList username={username} handleEndTurn={handleEndTurn} /> :
+        null
       }
 
       {props.room.hasStarted &&
-        <WordCard word={userState.card} />
+        <WordCard word={props.user.card} />
       }
 
       <AlertDialog 
@@ -351,13 +369,15 @@ const Room = (props) => {
 
 const mapStateToProps = state => {
   return {
-    room: state.room.room
+    room: state.room.room,
+    user: state.user.user
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    onUpdateRoom: (room) => dispatch({type: actionTypes.UPDATE_ROOM, room: room})
+    onUpdateRoom: (room) => dispatch({type: actionTypes.UPDATE_ROOM, room: room}),
+    onUpdateUser: (user) => dispatch({type: actionTypes.UPDATE_USER, user: user})
   };
 };
 
