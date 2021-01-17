@@ -4,10 +4,13 @@ const mongoConnect = require('./util/database').mongoConnect;
 
 require('dotenv').config();
 
-const startNum = 99;
+const startNum = 1;
 
 mongoConnect(() => {
-  readXlsxFile('words.xlsx').then((rows) => {
+  // Card.dropCollection();
+
+  const language = 'english';
+  readXlsxFile('words.xlsx', { sheet: language }).then((rows) => {
     // `rows is an array of rows
     // each row being an array of cells.
     for (let i = startNum - 1; i < rows.length; i++) {
@@ -15,10 +18,11 @@ mongoConnect(() => {
       const a = rows[i][1];
       const b = rows[i][2];
   
-      const card = new Card(num, a, b);
+      const card = new Card(num, a, b, language);
       card.insert();
     }
   });
+
   return;
 });
 
