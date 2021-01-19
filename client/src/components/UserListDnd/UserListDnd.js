@@ -13,6 +13,7 @@ import {
 } from '@material-ui/core';
 import DragHandleIcon from '@material-ui/icons/DragHandle';
 import { applyDrag, getUserString } from '../../shared/utils';
+import * as actionTypes from '../../store/actions';
 
 const useStyles = makeStyles({
   list: {
@@ -67,4 +68,10 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(UserListDnd);
+const mapDispatchToProps = dispatch => {
+  return {
+    onUpdateRoom: (room) => dispatch({type: actionTypes.UPDATE_ROOM, room: room})
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(UserListDnd);
