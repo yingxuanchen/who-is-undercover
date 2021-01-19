@@ -25,3 +25,12 @@ export const getUserString = (user, index, currentTurn, myUsername) => {
     (user.isOut ? ' (Out)' : '') +
     (currentTurn === 'ended' && user.role === 'anti' ? ' (Undercover)' : '');
 };
+
+export const getMinMaxAntiBlank = (totalCount) => {
+  return {
+    minAnti: 1,
+    maxAnti: parseInt(totalCount/3, 10),
+    minBlank: 0,
+    maxBlank: totalCount < 4 ? 0 : 1
+  };
+};

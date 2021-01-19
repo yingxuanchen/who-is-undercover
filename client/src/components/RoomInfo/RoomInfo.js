@@ -16,8 +16,8 @@ const RoomInfo = (props) => {
           <Grid item xs={1} sm={4}/><Grid item xs={5} sm={2}>Undercover:</Grid>
           <Grid item xs={5} sm={2}>
             {props.user.isHost && !props.room.hasStarted ?
-              <TextField type='number' fullWidth id='antiCount' name='antiCount' label='Undercover' defaultValue={props.inputState.antiCount}
-                inputProps={{min: '1', max: `${parseInt(props.room.totalCount/3)}`}} onChange={props.handleInputChange} />
+              <TextField type='number' fullWidth id='antiCount' name='antiCount' label='Undercover' value={props.inputState.antiCount}
+                onChange={props.handleInputChange} />
               : props.room.antiCount
             }
           </Grid>
@@ -26,8 +26,8 @@ const RoomInfo = (props) => {
           <Grid item xs={1} sm={4}/><Grid item xs={5} sm={2}>Blank:</Grid>
           <Grid item xs={5} sm={2}>
             {props.user.isHost && !props.room.hasStarted ?
-              <TextField type='number' fullWidth id='blankCount' name='blankCount' label='Blank' defaultValue={props.inputState.blankCount}
-                inputProps={{min: '0', max: `${props.room.totalCount < 4 ? '0' : '1'}`}} onChange={props.handleInputChange} />
+              <TextField type='number' fullWidth id='blankCount' name='blankCount' label='Blank' value={props.inputState.blankCount}
+                onChange={props.handleInputChange} />
               : props.room.blankCount
             }
           </Grid>

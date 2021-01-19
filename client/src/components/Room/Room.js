@@ -23,13 +23,16 @@ import WordCard from '../WordCard/WordCard';
 import UserList from '../UserList/UserList';
 import UserListDnd from '../UserListDnd/UserListDnd';
 import RoomInfo from '../RoomInfo/RoomInfo';
-import { getUserString } from '../../shared/utils';
+import { getUserString, getMinMaxAntiBlank } from '../../shared/utils';
 import * as actionTypes from '../../store/actions';
 
 const useStyles = makeStyles({
   language: {
     flexDirection: 'initial',
   },
+  whiteSpace: {
+    whiteSpace: 'pre-line',
+  }
 });
 
 const Room = (props) => {
@@ -105,7 +108,8 @@ const Room = (props) => {
   }, [roomId, username, onUpdateRoom, onUpdateUser]);
 
   const handleInputChange = (event) => {
-    const updatedInputState = {...inputState, [event.target.name]: +event.target.value};
+    const value = parseInt(event.target.value, 10) ? parseInt(event.target.value, 10) : 0;
+    const updatedInputState = {...inputState, [event.target.name]: value};
     setInputState(updatedInputState);
   };
 
@@ -130,6 +134,12 @@ const Room = (props) => {
   };
 
   const handleStartGame = () => {
+    const { minAnti, maxAnti, minBlank, maxBlank } = getMinMaxAntiBlank(props.room.totalCount);
+    if (inputState.antiCount < minAnti || inputState.antiCount > maxAnti
+      || inputState.blankCount < minBlank || inputState.blankCount > maxBlank) {
+        return;
+    }
+
     axios.post('/start-game', 
       { 
         room: {
@@ -209,6 +219,12 @@ const Room = (props) => {
     }
   };
 
+  const getMinMaxAntiBlankMessage = () => {
+    const { minAnti, maxAnti, minBlank, maxBlank } = getMinMaxAntiBlank(props.room.totalCount);
+    return `Undercover: min ${minAnti}, max ${maxAnti}
+      Blank: min ${minBlank}, max ${maxBlank}`;
+  };
+
   const getVoteMessage = () => {
     if (props.room.currentTurn === 'hostVoting') {
       return 'Please discuss and only host can vote';
@@ -279,7 +295,9 @@ const Room = (props) => {
       <br/>
 
       {!props.room.hasStarted &&
-        <Typography color='error'>{props.room.totalCount < 3 ? 'Game must have at least 3 users' : ''}</Typography>
+        <Typography classes={{root: classes.whiteSpace}} color='error'>
+          {props.room.totalCount < 3 ? 'Game must have at least 3 users' : getMinMaxAntiBlankMessage()}
+        </Typography>
       }
       <Typography variant='h6' color='primary'>
         {messageState}
@@ -293,6 +311,7 @@ const Room = (props) => {
 
       {!props.room.hasStarted && props.user.isHost &&
         <Typography component='div'>
+          <p></p>
           <FormControl error={languageError} component='fieldset'>
             <FormLabel component='legend'>Language: </FormLabel>
             <FormGroup classes={{root: classes.language}}>
