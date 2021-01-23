@@ -16,9 +16,13 @@ import { applyDrag, getUserString } from '../../shared/utils';
 import * as actionTypes from '../../store/actions';
 
 const useStyles = makeStyles({
-  list: {
+  listItem: {
     textAlign: 'center',
   },
+  listSubheader: {
+    lineHeight: 1.5,
+    marginTop: '2em'
+  }
 });
 
 const UserListDnd = (props) => {
@@ -33,15 +37,15 @@ const UserListDnd = (props) => {
 
   return (
     <List subheader={
-      <ListSubheader>
-        Users
+      <ListSubheader classes={{root: classes.listSubheader}}>
+        Players
       </ListSubheader>
     }>
       <Container dragHandleSelector=".drag-handle" lockAxis="y" onDrop={handleChangeOrder}>
         {props.room.users.map((user, index) => {
           return (
             <Draggable key={index}>
-              <ListItem className={classes.list}>
+              <ListItem className={classes.listItem}>
                 <ListItemText primary={getUserString(user, index, props.room.currentTurn, props.username)} />
                 <ListItemSecondaryAction>
                   <ListItemIcon className="drag-handle">

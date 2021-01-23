@@ -1,6 +1,22 @@
 const Room = require('../models/room');
 const Card = require('../models/card');
 const io = require('../socket');
+const Feedback = require('../models/feedback');
+
+exports.feedback = (req, res, next) => {
+  const name = req.body.name;
+  const content = req.body.content;
+
+  const feedback = new Feedback(name, content);
+  feedback.insert()
+    .then(feedback => {
+      res.sendStatus(200);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: err });
+    });
+};
 
 exports.checkSession = (req, res, next) => {
   const roomId = req.session.roomId;

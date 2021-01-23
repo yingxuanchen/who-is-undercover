@@ -296,7 +296,7 @@ const Room = (props) => {
 
       {!props.room.hasStarted &&
         <Typography classes={{root: classes.whiteSpace}} color='error'>
-          {props.room.totalCount < 3 ? 'Game must have at least 3 users' : getMinMaxAntiBlankMessage()}
+          {props.room.totalCount < 3 ? 'Game must have at least 3 players' : getMinMaxAntiBlankMessage()}
         </Typography>
       }
       <Typography variant='h6' color='primary'>

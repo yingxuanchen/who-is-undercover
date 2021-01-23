@@ -11,9 +11,13 @@ import {
 import { getUserString } from '../../shared/utils';
 
 const useStyles = makeStyles({
-  list: {
+  listItem: {
     textAlign: 'center'
   },
+  listSubheader: {
+    lineHeight: 1.5,
+    marginTop: '2em'
+  }
 });
 
 const UserList = (props) => {
@@ -21,14 +25,14 @@ const UserList = (props) => {
 
   return (
     <List subheader={
-      <ListSubheader>
-        Users
+      <ListSubheader classes={{root: classes.listSubheader}}>
+        Players
       </ListSubheader>
     }>
         {props.room.users.map((user, index) => {
           return (
             <React.Fragment key={index}>
-              <ListItem className={classes.list}>
+              <ListItem className={classes.listItem}>
                 <ListItemText primary={getUserString(user, index, props.room.currentTurn, props.username)} />
               </ListItem>
               {user.name === props.username && props.room.currentTurn === index &&
