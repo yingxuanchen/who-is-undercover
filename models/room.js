@@ -24,6 +24,7 @@ class Room {
   }
 
   static updateRoom(room) {
+    room.lastUpdated = Date.now();
     const db = getDb();
     return db.collection('rooms').replaceOne({ _id: room._id }, room)
       .then(result => {
