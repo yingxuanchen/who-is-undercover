@@ -4,7 +4,9 @@ import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import openSocket from 'socket.io-client';
 import {
+  Backdrop,
   Button,
+  CircularProgress,
   Checkbox,
   FormControl,
   FormControlLabel,
@@ -26,14 +28,18 @@ import RoomInfo from '../RoomInfo/RoomInfo';
 import { getUserString, getMinMaxAntiBlank } from '../../shared/utils';
 import * as actionTypes from '../../store/actions';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   language: {
     flexDirection: 'initial',
   },
   whiteSpace: {
     whiteSpace: 'pre-line',
-  }
-});
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
+}));
 
 const Room = (props) => {
   const classes = useStyles();
@@ -65,6 +71,7 @@ const Room = (props) => {
   const [ messageState, setMessageState ] = useState(null);
   const [ randomOrderState, setRandomOrderState ] = useState(false);
   const [ languageState, setLanguageState ] = useState(languages.map(el => el.prop));
+  const [ backdropState, setBackdropState ] = useState(false);
 
   const languageError = languageState.length < 1;
 
@@ -99,12 +106,20 @@ const Room = (props) => {
       return;
     }
 
+    setBackdropState(true);
+
     axios.post('/room', { roomId: roomId, username: username })
       .then(res => {
+        setBackdropState(false)
         onUpdateRoom(res.data.room);
         onUpdateUser(res.data.user);
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
+    // eslint-disable-next-line
   }, [roomId, username, onUpdateRoom, onUpdateUser]);
 
   const handleInputChange = (event) => {
@@ -126,11 +141,17 @@ const Room = (props) => {
   };
 
   const handleLeaveRoom = () => {
+    setBackdropState(true);
+
     axios.post('/leave-room', { roomId: roomId, username: username })
       .then(res => {
         return props.history.replace('/');
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
   };
 
   const handleStartGame = () => {
@@ -139,6 +160,8 @@ const Room = (props) => {
       || inputState.blankCount < minBlank || inputState.blankCount > maxBlank) {
         return;
     }
+
+    setBackdropState(true);
 
     axios.post('/start-game', 
       { 
@@ -151,8 +174,14 @@ const Room = (props) => {
         randomOrder: randomOrderState,
         languageArray: languageState
       })
-      .then()
-      .catch(err => console.log(err));
+      .then(res => {
+        setBackdropState(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
   };
 
   const handleEndGame = () => {
@@ -167,9 +196,18 @@ const Room = (props) => {
   };
 
   const confirmEndGame = () => {
+    setDialogState(false);
+    setBackdropState(true);
+
     axios.post('/end-game', { roomId: roomId })
-      .then(res => setDialogState(false))
-      .catch(err => console.log(err));
+      .then(res => {
+        setBackdropState(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
   };
 
   const handleLeaveGame = () => {
@@ -184,9 +222,18 @@ const Room = (props) => {
   };
 
   const confirmLeaveGame = () => {
+    setDialogState(false);
+    setBackdropState(true);
+
     axios.post('/leave-game', { roomId: roomId })
-      .then(res => setDialogState(false))
-      .catch(err => console.log(err));
+      .then(res => {
+        setBackdropState(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
   };
 
   const handleCloseDialog = () => {
@@ -194,9 +241,17 @@ const Room = (props) => {
   };
 
   const handleEndTurn = () => {
+    setBackdropState(true);
+
     axios.post('/end-turn', { roomId: roomId })
-      .then()
-      .catch(err => console.log(err));
+      .then(res => {
+        setBackdropState(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
   };
 
   const handleChooseUser = (event) => {
@@ -208,14 +263,28 @@ const Room = (props) => {
       return;
     }
 
+    setBackdropState(true);
+
     if (props.room.currentTurn === 'hostVoting') {
       axios.post('/host-vote', { roomId: roomId, chosenUser: chosenUserState })
-        .then()
-        .catch(err => console.log(err));
+        .then(res => {
+          setBackdropState(false);
+        })
+        .catch(err => {
+          console.log(err);
+          setBackdropState(false);
+          displayErrorDialog();
+        });
     } else {
       axios.post('/vote', { roomId: roomId, username: username, chosenUser: chosenUserState })
-        .then()
-        .catch(err => console.log(err));
+        .then(res => {
+          setBackdropState(false);
+        })
+        .catch(err => {
+          console.log(err);
+          setBackdropState(false);
+          displayErrorDialog();
+        });
     }
   };
 
@@ -258,12 +327,26 @@ const Room = (props) => {
     return `The ${groupName} win!`;
   };
 
+  const displayErrorDialog = () => {
+    setDialogState(true);
+    setDialogPropsState({
+      onClose: handleCloseDialog,
+      title: 'Server Error',
+      message: 'Please try again later.',
+      onCancel: null,
+      onConfirm: handleCloseDialog
+    });
+  }
+
   if (!props.location.data) {
     return <Redirect to='/' />;
   }
 
   return (props.room && props.user &&
     <div>
+      <Backdrop className={classes.backdrop} open={backdropState}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <Typography variant='h6'>
         <Grid container spacing={1}>
           <RoomInfo inputState={inputState} handleInputChange={handleInputChange} />

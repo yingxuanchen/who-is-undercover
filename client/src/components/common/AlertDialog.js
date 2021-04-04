@@ -22,9 +22,11 @@ export default function AlertDialog(props) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={props.onCancel} color="primary">
-            Cancel
-          </Button>
+          {props.onCancel &&
+            <Button onClick={props.onCancel} color="primary">
+              Cancel
+            </Button>
+          }
           <Button onClick={props.onConfirm} color="primary" autoFocus>
             OK
           </Button>

@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import {
+  Backdrop,
   Button,
+  CircularProgress,
   Grid,
   TextField,
   Typography
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import AlertDialog from '../common/AlertDialog';
 import Feedback from '../Feedback/Feedback';
 // import classes from './MainPage.module.css';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   root: {
     overflowX: 'hidden'
   },
@@ -26,8 +29,12 @@ const useStyles = makeStyles({
     marginTop: '2em',
     marginBottom: '1em',
     display: 'inline-block'
-  }
-});
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
+}));
 
 const MainPage = (props) => {
   const classes = useStyles();
@@ -45,17 +52,34 @@ const MainPage = (props) => {
     error: false,
     helperText: ''
   });
+  const [ dialogState, setDialogState ] = useState(false);
+  const [ dialogPropsState, setDialogPropsState ] = useState({
+    onClose: null,
+    title: '',
+    message: '',
+    onCancel: null,
+    onConfirm: null
+  });
+  const [ backdropState, setBackdropState ] = useState(false);
 
   useEffect(() => {
+    setBackdropState(true);
+
     axios.get('/check-session')
       .then(res => {
+        setBackdropState(false);
         if (res.data.roomId && res.data.username) {
           setRedirectState(
             <Redirect to={{ pathname: '/room', data: {roomId: res.data.roomId, username: res.data.username} }} />
           );
         }
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
+    // eslint-disable-next-line
   }, []);
 
   const handleInputChange = (event) => {
@@ -65,6 +89,8 @@ const MainPage = (props) => {
 
   const handleEnterRoom = (event) => {
     event.preventDefault();
+
+    setBackdropState(true);
 
     setRoomIdErrorState({ error: false, helperText: '' });
     setUsernameErrorState({ error: false, helperText: '' });
@@ -76,6 +102,7 @@ const MainPage = (props) => {
         );
       })
       .catch(err => {
+        setBackdropState(false);
         console.log(err.response);
         const error = err.response.data.error;
         if (error === 'game has started') {
@@ -92,9 +119,27 @@ const MainPage = (props) => {
       });
   };
 
+  const handleCloseDialog = () => {
+    setDialogState(false);
+  };
+
+  const displayErrorDialog = () => {
+    setDialogState(true);
+    setDialogPropsState({
+      onClose: handleCloseDialog,
+      title: 'Server Error',
+      message: 'Please try again later.',
+      onCancel: null,
+      onConfirm: handleCloseDialog
+    });
+  }
+
   return (
     <div className={classes.root}>
       {redirectState}
+      <Backdrop className={classes.backdrop} open={backdropState}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <form onSubmit={handleEnterRoom}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
@@ -141,6 +186,14 @@ const MainPage = (props) => {
       <Typography variant='caption' classes={{root: classes.footer}}>
         The code for this app can be found <a href='https://github.com/yingxuanchen/who-is-undercover' target='_blank' rel='noreferrer'>here</a>.
       </Typography>
+
+      <AlertDialog 
+        open={dialogState}
+        onClose={dialogPropsState.onClose}
+        title={dialogPropsState.title}
+        message={dialogPropsState.message}
+        onCancel={dialogPropsState.onCancel}
+        onConfirm={dialogPropsState.onConfirm} />
     </div>
   );
 };
