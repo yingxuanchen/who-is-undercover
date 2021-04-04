@@ -263,19 +263,18 @@ const Room = (props) => {
       return;
     }
 
-    setBackdropState(true);
-
     if (props.room.currentTurn === 'hostVoting') {
-      axios.post('/host-vote', { roomId: roomId, chosenUser: chosenUserState })
-        .then(res => {
-          setBackdropState(false);
-        })
-        .catch(err => {
-          console.log(err);
-          setBackdropState(false);
-          displayErrorDialog();
-        });
+      setDialogState(true);
+      setDialogPropsState({
+        onClose: handleCloseDialog,
+        title: 'Confirm Vote?',
+        message: 'Please make sure it has been agreed by all players.',
+        onCancel: handleCloseDialog,
+        onConfirm: confirmHostVote
+      });
     } else {
+      setBackdropState(true);
+
       axios.post('/vote', { roomId: roomId, username: username, chosenUser: chosenUserState })
         .then(res => {
           setBackdropState(false);
@@ -286,6 +285,21 @@ const Room = (props) => {
           displayErrorDialog();
         });
     }
+  };
+
+  const confirmHostVote = () => {
+    setDialogState(false);
+    setBackdropState(true);
+
+    axios.post('/host-vote', { roomId: roomId, chosenUser: chosenUserState })
+      .then(res => {
+        setBackdropState(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setBackdropState(false);
+        displayErrorDialog();
+      });
   };
 
   const getMinMaxAntiBlankMessage = () => {
