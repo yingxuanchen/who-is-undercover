@@ -310,7 +310,7 @@ const Room = (props) => {
 
   const getVoteMessage = () => {
     if (props.room.currentTurn === 'hostVoting') {
-      return 'Please discuss and only host can vote';
+      return '';
     }
     if (props.user.isOut) {
       return 'You cannot vote because you are out';
@@ -361,6 +361,7 @@ const Room = (props) => {
       <Backdrop className={classes.backdrop} open={backdropState}>
         <CircularProgress color="inherit" />
       </Backdrop>
+
       <Typography variant='h6'>
         <Grid container spacing={1}>
           <RoomInfo inputState={inputState} handleInputChange={handleInputChange} />
@@ -389,25 +390,29 @@ const Room = (props) => {
           <Grid item xs={1}/>
         </Grid>
       </Typography>
-      <br/>
 
-      {!props.room.hasStarted && !props.user.isHost && props.room.totalCount >= 3 &&
-        <Typography variant='h6' color='primary'>
-          Waiting for host to start game...
-        </Typography>
-      }
+      <Typography variant='h6' color='primary' classes={{root: classes.whiteSpace}}>
+        {!props.room.hasStarted && !props.user.isHost && props.room.totalCount >= 3 &&
+          `Waiting for host to start game...`
+        }
+        {props.room.currentTurn === 'hostVoting' &&
+          `There is a tie in votes among:
+          ${props.room.users
+            .map(user => user.name)
+            .filter((name, index) => props.room.usersWithMostVotes.includes(index))
+            .join(', ')}
+          Please discuss and host will vote in the system`
+        }
+        {messageState ? messageState + '\n' : ''}
+        {props.room.currentTurn === 'ended' &&
+          `Game has ended!
+          ${getWinnerMessage(props.room.winner)}`
+        }
+      </Typography>
+
       {!props.room.hasStarted &&
         <Typography classes={{root: classes.whiteSpace}} color='error'>
           {props.room.totalCount < 3 ? 'Game must have at least 3 players' : getMinMaxAntiBlankMessage()}
-        </Typography>
-      }
-      <Typography variant='h6' color='primary'>
-        {messageState}
-      </Typography>
-      {props.room.currentTurn === 'ended' && 
-        <Typography variant='h6' color='primary'>
-          Game has ended! <br/>
-          {getWinnerMessage(props.room.winner)}
         </Typography>
       }
 
@@ -440,6 +445,7 @@ const Room = (props) => {
 
       {props.room.hasStarted && (props.room.currentTurn === 'voting' || props.room.currentTurn === 'hostVoting') ?
         <React.Fragment>
+          <br/>
           <FormControl component='fieldset'>
             <FormLabel component='legend'>Users</FormLabel>
             <RadioGroup aria-label='users' name='users' value={chosenUserState} onChange={handleChooseUser}>
