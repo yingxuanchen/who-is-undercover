@@ -175,9 +175,8 @@ const MainPage = (props) => {
           <li>
             At the end of each round,
             <ol type='a'>
-              <li>If only Civilians are left in the game, Civilians win.</li>
-              <li>If the number of Undercovers is more than that of Civilians, Undercovers win.</li>
-              <li>If there only 2 players left in the game, if there is a Blank left, that Blank wins. If there is an Undercover left, Undercovers win.</li>
+              <li>If only Civilians are left in the game, the Civilians win.</li>
+              <li>If only 1 Civilian is left, the game ends. If there are Blanks alive, the Blanks win. If not, the Undercovers win.</li>
             </ol>
           </li>
         </ol>

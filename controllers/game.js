@@ -334,8 +334,8 @@ exports.vote = (req, res, next) => {
     })
     .then(updatedRoom => {
       if (updatedRoom) {
-        if (shouldEndGame(updatedRoom.users, updatedRoom.currentCount)) {
-          req.body.winner = getWinner(updatedRoom.users, updatedRoom.currentCount);
+        if (shouldEndGame(updatedRoom.users)) {
+          req.body.winner = getWinner(updatedRoom.users);
           req.body.userVotedOut = userVotedOut;
           next();
         } else {
@@ -370,8 +370,8 @@ exports.hostVote = (req, res, next) => {
     })
     .then(updatedRoom => {
       if (updatedRoom) {
-        if (shouldEndGame(updatedRoom.users, updatedRoom.currentCount)) {
-          req.body.winner = getWinner(updatedRoom.users, updatedRoom.currentCount);
+        if (shouldEndGame(updatedRoom.users)) {
+          req.body.winner = getWinner(updatedRoom.users);
           req.body.userVotedOut = chosenUser;
           next();
         } else {
@@ -446,42 +446,29 @@ function getFirstTurn(usersArray, outIndex, totalCount) {
   return firstTurn;
 }
 
-function shouldEndGame(users, currentCount) {
-  if (currentCount <= 2) {
-    return true;
-  }
-  
+function shouldEndGame(users) {  
   const inUsers = users.filter(user => !user.isOut);
   const normUsers = inUsers.filter(user => user.role === 'norm');
-  const antiUsers = inUsers.filter(user => user.role === 'anti');
 
-  if (inUsers.length === normUsers.length) {
-    return true;
-  }
-  if (antiUsers.length > normUsers.length) {
+  if (inUsers.length === normUsers.length || normUsers.length === 1) {
     return true;
   }
   return false;
 }
 
-function getWinner(users, currentCount) {
+function getWinner(users) {
   const inUsers = users.filter(user => !user.isOut);
   const normUsers = inUsers.filter(user => user.role === 'norm');
-  const antiUsers = inUsers.filter(user => user.role === 'anti');
   const blankUsers = inUsers.filter(user => user.role === 'blank');
 
   if (inUsers.length === normUsers.length) {
     return 'norm';
   }
-  if (antiUsers.length > normUsers.length) {
-    return 'anti';
-  }
-
-  if (blankUsers.length === 2) {
-    return 'blank';
-  } else if (blankUsers.length === 1) {
+  if (blankUsers.length === 1) {
     return users.findIndex(user => user.name === blankUsers[0].name);
   }
-
+  if (blankUsers.length > 1) {
+    return 'blank';
+  }
   return 'anti';
 }
