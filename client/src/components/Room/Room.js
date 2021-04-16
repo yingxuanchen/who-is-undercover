@@ -391,6 +391,11 @@ const Room = (props) => {
       </Typography>
       <br/>
 
+      {!props.room.hasStarted && !props.user.isHost && props.room.totalCount >= 3 &&
+        <Typography variant='h6' color='primary'>
+          Waiting for host to start game...
+        </Typography>
+      }
       {!props.room.hasStarted &&
         <Typography classes={{root: classes.whiteSpace}} color='error'>
           {props.room.totalCount < 3 ? 'Game must have at least 3 players' : getMinMaxAntiBlankMessage()}

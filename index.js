@@ -13,7 +13,7 @@ require('dotenv').config();
 const store = new MongoDBStore({
   uri: process.env.MONGO_CONNECTION_STRING,
   collection: 'sessions',
-  expires: 86400000
+  expires: 86400000 // session expires in 1 day
 });
 
 // serve up production assets
